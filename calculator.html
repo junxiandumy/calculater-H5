@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高级计算器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        accent: '#FF9F1C',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style type="text/tailwindcss">
+        @layer utilities {
+            .content-auto {
+                content-visibility: auto;
+            }
+            .calculator-shadow {
+                box-shadow: 0 10px 25px -5px rgba(22, 93, 255, 0.1), 0 8px 10px -6px rgba(22, 93, 255, 0.1);
+            }
+            .button-hover {
+                @apply transition-all duration-200 hover:scale-105 active:scale-95;
+            }
+            .number-btn {
+                @apply bg-light dark:bg-dark text-dark dark:text-light button-hover;
+            }
+            .operator-btn {
+                @apply bg-primary/10 dark:bg-primary/20 text-primary button-hover;
+            }
+            .function-btn {
+                @apply bg-accent/10 dark:bg-accent/20 text-accent button-hover;
+            }
+            .equals-btn {
+                @apply bg-secondary/10 dark:bg-secondary/20 text-secondary button-hover;
+            }
+            .history-item {
+                @apply p-2 rounded-md hover:bg-primary/5 dark:hover:bg-primary/10 cursor-pointer transition-colors;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4 transition-colors duration-300">
+    <div class="calculator-container w-full max-w-md">
+        <!-- 主题切换按钮 -->
+        <div class="flex justify-end mb-4">
+            <button id="theme-toggle" class="bg-white dark:bg-gray-800 p-2 rounded-full shadow-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <i class="fa-regular fa-moon dark:hidden text-gray-700"></i>
+                <i class="fa-regular fa-sun hidden dark:inline-block text-yellow-300"></i>
+            </button>
+        </div>
+
+        <!-- 计算器主体 -->
+        <div class="calculator bg-white dark:bg-gray-800 rounded-2xl p-6 calculator-shadow transition-all duration-300">
+            <!-- 显示区域 -->
+            <div class="display mb-6">
+                <!-- 历史表达式 -->
+                <div id="history-display" class="text-right text-gray-500 dark:text-gray-400 h-6 overflow-hidden text-sm"></div>
+                <!-- 当前输入 -->
+                <div id="input-display" class="text-right text-4xl font-semibold h-12 overflow-hidden transition-all duration-200"></div>
+            </div>
+
+            <!-- 键盘区域 -->
+            <div class="grid grid-cols-4 gap-3">
+                <!-- 第一行 -->
+                <button data-value="C" class="function-btn rounded-xl py-4 px-2 text-lg">C</button>
+                <button data-value="⌫" class="function-btn rounded-xl py-4 px-2 text-lg">⌫</button>
+                <button data-value="%" class="function-btn rounded-xl py-4 px-2 text-lg">%</button>
+                <button data-value="/" class="operator-btn rounded-xl py-4 px-2 text-lg">÷</button>
+                
+                <!-- 第二行 -->
+                <button data-value="7" class="number-btn rounded-xl py-4 px-2 text-lg">7</button>
+                <button data-value="8" class="number-btn rounded-xl py-4 px-2 text-lg">8</button>
+                <button data-value="9" class="number-btn rounded-xl py-4 px-2 text-lg">9</button>
+                <button data-value="*" class="operator-btn rounded-xl py-4 px-2 text-lg">×</button>
+                
+                <!-- 第三行 -->
+                <button data-value="4" class="number-btn rounded-xl py-4 px-2 text-lg">4</button>
+                <button data-value="5" class="number-btn rounded-xl py-4 px-2 text-lg">5</button>
+                <button data-value="6" class="number-btn rounded-xl py-4 px-2 text-lg">6</button>
+                <button data-value="-" class="operator-btn rounded-xl py-4 px-2 text-lg">−</button>
+                
+                <!-- 第四行 -->
+                <button data-value="1" class="number-btn rounded-xl py-4 px-2 text-lg">1</button>
+                <button data-value="2" class="number-btn rounded-xl py-4 px-2 text-lg">2</button>
+                <button data-value="3" class="number-btn rounded-xl py-4 px-2 text-lg">3</button>
+                <button data-value="+" class="operator-btn rounded-xl py-4 px-2 text-lg">+</button>
+                
+                <!-- 第五行 -->
+                <button data-value="±" class="function-btn rounded-xl py-4 px-2 text-lg">±</button>
+                <button data-value="0" class="number-btn rounded-xl py-4 px-2 text-lg">0</button>
+                <button data-value="." class="number-btn rounded-xl py-4 px-2 text-lg">.</button>
+                <button data-value="=" class="equals-btn rounded-xl py-4 px-2 text-lg">=</button>
+            </div>
+
+            <!-- 历史记录面板 -->
+            <div class="history mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-gray-700 dark:text-gray-300 font-medium">历史记录</h3>
+                    <button id="clear-history" class="text-xs text-gray-500 dark:text-gray-400 hover:text-primary dark:hover:text-primary transition-colors">清空</button>
+                </div>
+                <div id="history-list" class="max-h-32 overflow-y-auto text-sm space-y-1 text-gray-600 dark:text-gray-400">
+                    <!-- 历史记录将在这里动态显示 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM 元素
+        const inputDisplay = document.getElementById('input-display');
+        const historyDisplay = document.getElementById('history-display');
+        const historyList = document.getElementById('history-list');
+        const themeToggle = document.getElementById('theme-toggle');
+        const clearHistoryBtn = document.getElementById('clear-history');
+        const calculatorBtns = document.querySelectorAll('.calculator button');
+
+        // 计算器状态
+        let calculatorState = {
+            currentValue: '0',
+            previousValue: null,
+            operator: null,
+            waitingForOperand: false,
+            history: JSON.parse(localStorage.getItem('calculatorHistory')) || []
+        };
+
+        // 初始化
+        updateDisplay();
+        updateHistoryList();
+        setupEventListeners();
+        setupThemeToggle();
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            calculatorBtns.forEach(button => {
+                button.addEventListener('click', () => handleButtonClick(button.dataset.value));
+            });
+
+            // 添加键盘支持
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        // 处理按钮点击
+        function handleButtonClick(value) {
+            switch (value) {
+                case '0': case '1': case '2': case '3': case '4':
+                case '5': case '6': case '7': case '8': case '9':
+                    inputNumber(value);
+                    break;
+                case '.':
+                    inputDecimal();
+                    break;
+                case '+': case '-': case '*': case '/':
+                    handleOperator(value);
+                    break;
+                case '=':
+                    calculate();
+                    break;
+                case 'C':
+                    clearAll();
+                    break;
+                case '⌫':
+                    backspace();
+                    break;
+                case '%':
+                    calculatePercentage();
+                    break;
+                case '±':
+                    toggleSign();
+                    break;
+            }
+        }
+
+        // 处理键盘输入
+        function handleKeyPress(event) {
+            const key = event.key;
+            
+            // 数字键
+            if (/[0-9]/.test(key)) {
+                event.preventDefault();
+                inputNumber(key);
+            }
+            
+            // 运算符
+            if (['+', '-', '*', '/', '%', '='].includes(key)) {
+                event.preventDefault();
+                if (key === '=') {
+                    calculate();
+                } else if (key === '%') {
+                    calculatePercentage();
+                } else {
+                    handleOperator(key);
+                }
+            }
+            
+            // 小数点
+            if (key === '.') {
+                event.preventDefault();
+                inputDecimal();
+            }
+            
+            // 回车键
+            if (key === 'Enter') {
+                event.preventDefault();
+                calculate();
+            }
+            
+            // 退格键
+            if (key === 'Backspace') {
+                event.preventDefault();
+                backspace();
+            }
+            
+            // ESC 键
+            if (key === 'Escape') {
+                event.preventDefault();
+                clearAll();
+            }
+        }
+
+        // 输入数字
+        function inputNumber(number) {
+            const { currentValue, waitingForOperand } = calculatorState;
+            
+            if (waitingForOperand) {
+                calculatorState.currentValue = number;
+                calculatorState.waitingForOperand = false;
+            } else {
+                calculatorState.currentValue = currentValue === '0' ? number : currentValue + number;
+            }
+            
+            updateDisplay();
+        }
+
+        // 输入小数点
+        function inputDecimal() {
+            if (calculatorState.waitingForOperand) {
+                calculatorState.currentValue = '0.';
+                calculatorState.waitingForOperand = false;
+                updateDisplay();
+                return;
+            }
+            
+            if (!calculatorState.currentValue.includes('.')) {
+                calculatorState.currentValue += '.';
+                updateDisplay();
+            }
+        }
+
+        // 处理运算符
+        function handleOperator(nextOperator) {
+            const { currentValue, previousValue, operator } = calculatorState;
+            const inputValue = parseFloat(currentValue);
+            
+            if (operator && calculatorState.waitingForOperand) {
+                calculatorState.operator = nextOperator;
+                updateDisplay();
+                return;
+            }
+            
+            if (previousValue === null && !isNaN(inputValue)) {
+                calculatorState.previousValue = currentValue;
+            } else if (operator) {
+                const result = calculateOperation(previousValue, currentValue, operator);
+                calculatorState.previousValue = String(result);
+                addToHistory(`${formatNumber(previousValue)} ${getOperatorSymbol(operator)} ${formatNumber(currentValue)} = ${formatNumber(result)}`);
+            }
+            
+            calculatorState.operator = nextOperator;
+            calculatorState.waitingForOperand = true;
+            updateDisplay();
+        }
+
+        // 计算结果
+        function calculate() {
+            const { currentValue, previousValue, operator } = calculatorState;
+            
+            if (previousValue === null || operator === null) return;
+            
+            if (calculatorState.waitingForOperand) {
+                calculatorState.currentValue = previousValue;
+            } else {
+                const result = calculateOperation(previousValue, currentValue, operator);
+                addToHistory(`${formatNumber(previousValue)} ${getOperatorSymbol(operator)} ${formatNumber(currentValue)} = ${formatNumber(result)}`);
+                calculatorState.currentValue = String(result);
+                calculatorState.previousValue = null;
+            }
+            
+            calculatorState.operator = null;
+            calculatorState.waitingForOperand = false;
+            updateDisplay();
+        }
+
+        // 执行计算操作
+        function calculateOperation(prev, current, op) {
+            const prevValue = parseFloat(prev);
+            const currentValue = parseFloat(current);
+            
+            if (isNaN(prevValue) || isNaN(currentValue)) return '0';
+            
+            let result;
+            switch (op) {
+                case '+':
+                    result = prevValue + currentValue;
+                    break;
+                case '-':
+                    result = prevValue - currentValue;
+                    break;
+                case '*':
+                    result = prevValue * currentValue;
+                    break;
+                case '/':
+                    if (currentValue === 0) {
+                        return '错误';
+                    }
+                    result = prevValue / currentValue;
+                    break;
+                default:
+                    return current;
+            }
+            
+            // 限制结果的小数位数
+            return String(parseFloat(result.toFixed(10)));
+        }
+
+        // 清除所有
+        function clearAll() {
+            calculatorState.currentValue = '0';
+            calculatorState.previousValue = null;
+            calculatorState.operator = null;
+            calculatorState.waitingForOperand = false;
+            updateDisplay();
+        }
+
+        // 退格
+        function backspace() {
+            const { currentValue } = calculatorState;
+            
+            if (currentValue.length === 1 || currentValue === '错误') {
+                calculatorState.currentValue = '0';
+            } else {
+                calculatorState.currentValue = currentValue.slice(0, -1);
+            }
+            
+            updateDisplay();
+        }
+
+        // 计算百分比
+        function calculatePercentage() {
+            const value = parseFloat(calculatorState.currentValue);
+            calculatorState.currentValue = String(value / 100);
+            updateDisplay();
+        }
+
+        // 切换正负号
+        function toggleSign() {
+            const value = parseFloat(calculatorState.currentValue);
+            calculatorState.currentValue = String(-value);
+            updateDisplay();
+        }
+
+        // 更新显示
+        function updateDisplay() {
+            inputDisplay.textContent = formatNumber(calculatorState.currentValue);
+            
+            if (calculatorState.previousValue !== null) {
+                historyDisplay.textContent = `${formatNumber(calculatorState.previousValue)} ${getOperatorSymbol(calculatorState.operator)}`;
+            } else {
+                historyDisplay.textContent = '';
+            }
+        }
+
+        // 获取运算符符号
+        function getOperatorSymbol(operator) {
+            switch (operator) {
+                case '+': return '+';
+                case '-': return '−';
+                case '*': return '×';
+                case '/': return '÷';
+                default: return '';
+            }
+        }
+
+        // 格式化数字显示
+        function formatNumber(number) {
+            if (number === '错误') return number;
+            
+            const parts = number.split('.');
+            let integerPart = parts[0];
+            const decimalPart = parts.length > 1 ? `.${parts[1]}` : '';
+            
+            // 添加千位分隔符
+            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            
+            return integerPart + decimalPart;
+        }
+
+        // 添加到历史记录
+        function addToHistory(entry) {
+            calculatorState.history.unshift(entry);
+            
+            // 限制历史记录数量
+            if (calculatorState.history.length > 10) {
+                calculatorState.history.pop();
+            }
+            
+            // 保存到本地存储
+            localStorage.setItem('calculatorHistory', JSON.stringify(calculatorState.history));
+            
+            // 更新历史记录显示
+            updateHistoryList();
+        }
+
+        // 更新历史记录列表
+        function updateHistoryList() {
+            historyList.innerHTML = '';
+            
+            calculatorState.history.forEach(entry => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.textContent = entry;
+                
+                // 点击历史记录可以重新计算
+                historyItem.addEventListener('click', () => {
+                    const result = entry.split('=')[1].trim();
+                    calculatorState.currentValue = result.replace(/,/g, '');
+                    calculatorState.previousValue = null;
+                    calculatorState.operator = null;
+                    calculatorState.waitingForOperand = false;
+                    updateDisplay();
+                });
+                
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        // 清空历史记录
+        function setupThemeToggle() {
+            // 检查用户偏好
+            if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+            
+            // 主题切换按钮事件
+            themeToggle.addEventListener('click', () => {
+                if (document.documentElement.classList.contains('dark')) {
+                    document.documentElement.classList.remove('dark');
+                    localStorage.theme = 'light';
+                } else {
+                    document.documentElement.classList.add('dark');
+                    localStorage.theme = 'dark';
+                }
+            });
+        }
+
+        // 清空历史记录
+        clearHistoryBtn.addEventListener('click', () => {
+            calculatorState.history = [];
+            localStorage.removeItem('calculatorHistory');
+            updateHistoryList();
+        });
+    </script>
+</body>
+</html>
+    
